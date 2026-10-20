@@ -1,0 +1,17 @@
+node_modules/
+dist/
+
+# Foundry: build output and vendored dependencies are not source.
+# Anchored on purpose: a bare `lib/` also matches src/lib/ and silently drops
+# the app's own modules.
+/lib/
+contracts/out/
+contracts/cache/
+broadcast/
+
+# Arc Studio pull tracker
+.arc-studio/
+
+.env
+.env.*
+*.log

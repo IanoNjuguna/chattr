@@ -1,8 +1,10 @@
 name: verify
 
-# The gate that must be green before a merge. It no-ops while a half of the repo
-# does not exist yet, so it is honest from the first commit: no Foundry project,
-# no contract job; no package.json, no app job.
+# The gate that must be green before a merge.
+#
+# Both jobs probe for their project files first, so the workflow is honest on a
+# commit that does not have them yet. The app is built with bun because that is
+# what the Arc Studio sandbox uses and what bun.lock pins.
 
 on:
   pull_request:
@@ -24,7 +26,21 @@ jobs:
       - name: Foundry project present?
         id: probe
         run: |
-          if [ -f foundry.toml ]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; echo "no foundry.toml yet, skipping"; fi
+          if [ -f foundry.toml ]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; echo "no foundry.toml, skipping"; fi
+
+      - uses: oven-sh/setup-bun@v2
+        if: steps.probe.outputs.found == 'true'
+        with:
+          bun-version: latest
+
+      # OpenZeppelin comes from node_modules, which foundry.toml lists as a lib dir
+      - name: install solidity dependencies
+        if: steps.probe.outputs.found == 'true'
+        run: |
+          if [ -f bun.lock ]; then bun install --frozen-lockfile; else bun install; fi
+          if [ ! -d lib/forge-std ]; then
+            git clone --depth 1 https://github.com/foundry-rs/forge-std lib/forge-std
+          fi
 
       - uses: foundry-rs/foundry-toolchain@v1
         if: steps.probe.outputs.found == 'true'
@@ -43,22 +59,22 @@ jobs:
       - name: App package present?
         id: probe
         run: |
-          if [ -f package.json ]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; echo "no package.json yet, skipping"; fi
+          if [ -f package.json ]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; echo "no package.json, skipping"; fi
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         if: steps.probe.outputs.found == 'true'
         with:
-          node-version: 22
+          bun-version: latest
 
       - name: install
         if: steps.probe.outputs.found == 'true'
         run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+          if [ -f bun.lock ]; then bun install --frozen-lockfile; else bun install; fi
 
       - name: typecheck
         if: steps.probe.outputs.found == 'true'
-        run: npx tsc --noEmit
+        run: bunx tsc --noEmit
 
       - name: build
         if: steps.probe.outputs.found == 'true'
-        run: npm run build --if-present
+        run: bun run build
