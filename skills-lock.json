@@ -23,7 +23,7 @@
       "source": "./local",
       "sourceType": "local",
       "skillPath": ".agents/skills/feature-process/SKILL.md",
-      "computedHash": "ab6762e51ffc53f7bef7c1fc1216885a6379e63802fb4681cea9f83cca28b3c4"
+      "computedHash": "1cb78fabda84141b8ae338ded87a64157fdd6b6fee72a636b8a18e215fb69956"
     },
     "humanise-text": {
       "source": "IntersectMBO/developer-experience",

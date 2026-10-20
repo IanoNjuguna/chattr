@@ -1,18 +1,21 @@
 # AGENTS.md
 
-> **Contract and money-path changes: issue, branch, verify, pull request. Nothing else touches `main` directly except docs.**
-> The gate is `npm run verify` and `forge test`. If it is red, the branch does not merge.
+> **Before you touch anything: every change goes issue → branch → pull request.**
+> No exceptions except production being down, and "it is only docs" is not one. `main` is what gets submitted, so it only receives reviewed merges. The gate is `forge test` and `npm run verify`; if it is red, the branch does not merge. `.github/workflows/pr-guard.yml` and `verify.yml` enforce the parts a check can enforce, and `feature-process` owns the rule.
 
 ## How work arrives
 
-Two lanes, because this repo is one builder and a deadline:
+**Every change goes issue → branch → pull request.** No exceptions except production being down.
 
-- **Docs, copy, README, PRD, skills**: commit straight to `main` with a small scoped message.
-- **Anything under `contracts/`, `src/`, `test/`, or any change that moves money**: issue first, then a branch named for it, then a PR that carries the reasoning. `main` is what gets submitted, so it stays green.
+1. **The issue exists before the code does.** Problem, scope and non-goals, testable acceptance criteria, risk and rollback, and the check that proves it. If those cannot be written, the work is not understood yet
+2. **The branch is named for it**, cut from current `main`: `feat/12-split-payout`. Never work on `main`
+3. **`forge test` and `npm run verify` are green before the PR exists.** Not after, and not "to see if CI passes"
+4. **The PR carries the reasoning**: `Closes #12`, what changed in the room's terms, how it was verified, the decisions and the options rejected, risk and rollback, and a screenshot for anything visual. `.github/pull_request_template.md` is the shape
+5. **Squash merge**, then confirm `verify` went green on `main`
 
-Branch naming: `feat/12-split-payout`, `fix/19-double-approve`. The number is the issue.
+`pr-guard` fails a pull request with no issue link or a branch name without its issue number. A P0 uses the `p0-hotfix` label and files the issue within 24 hours.
 
-The issue has five fields, and if you cannot fill all five the work is not understood yet: problem, scope and non-goals, testable acceptance criteria, risk and rollback (name anything on-chain or touching money), and which check covers it.
+The full procedure, including the exception and the failure modes it exists to prevent, is the `feature-process` skill. That skill owns the rule; this section is the summary and must not grow into a second copy of it.
 
 ## Project
 
@@ -89,5 +92,5 @@ If a rule fits two skills, it belongs in one and is cross-referenced from the ot
 ## What is deliberately not here
 
 - No design system file yet. `apple-design` governs taste until one exists, and if one is added it becomes the owner of tokens
-- No CI. `npm run verify` and `forge test` are run by hand and pasted into the PR
-- No issue templates or PR templates yet. The PR body shape is in `feature-process`
+- No issue templates. `gh issue create` with the five fields in `feature-process` is the shape; the PR template is `.github/pull_request_template.md`
+- Branch protection on `main` is a manual step in the GitHub UI. Until it is on, `verify` and `pr-guard` still run and still fail, they just do not block the merge button
