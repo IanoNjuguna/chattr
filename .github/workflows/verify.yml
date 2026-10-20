@@ -75,6 +75,10 @@ jobs:
         if: steps.probe.outputs.found == 'true'
         run: bunx tsc --noEmit
 
+      - name: unit tests
+        if: steps.probe.outputs.found == 'true'
+        run: bun test
+
       - name: build
         if: steps.probe.outputs.found == 'true'
         run: bun run build
