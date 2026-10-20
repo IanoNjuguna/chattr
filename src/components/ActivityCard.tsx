@@ -1,7 +1,7 @@
 /** One activity feed card. Under 80 lines. */
 import { ExternalLink, CheckCircle, Clock, ArrowDownCircle, AlertCircle } from 'lucide-react'
 import { Avatar } from './Avatar'
-import { fmtUsdc } from '../lib/money'
+import { fmtUsdc, fmtUsdcFine } from '../lib/money'
 import { explorerTx } from '../lib/constants'
 import type { ActivityItem } from '../lib/types'
 
@@ -98,7 +98,7 @@ export function ActivityCard({ item }: Props) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-            Paid <span className="tabular-nums">${fmtUsdc(item.amount!)}</span>
+            Paid <span className="tabular-nums">${fmtUsdcFine(item.amount!)}</span>
           </span>
           <span className="text-xs" style={{ color: 'var(--subtle)' }}>{timeAgo(item.timestamp)}</span>
         </div>
@@ -106,7 +106,7 @@ export function ActivityCard({ item }: Props) {
           <div style={{ color: 'var(--muted)' }}>
             to <span className="mono">{item.to ? short(item.to) : ''}</span>
             {item.fee !== undefined && item.fee > 0n && (
-              <span style={{ color: 'var(--subtle)' }}> · fee ${fmtUsdc(item.fee)}</span>
+              <span style={{ color: 'var(--subtle)' }}> · fee ${fmtUsdcFine(item.fee)}</span>
             )}
           </div>
           {item.memo && <div className="truncate" style={{ color: 'var(--subtle)' }}>{item.memo}</div>}
@@ -134,13 +134,13 @@ export function ActivityCard({ item }: Props) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-            Split payout <span className="tabular-nums">${fmtUsdc(item.amount!)}</span>
+            Split payout <span className="tabular-nums">${fmtUsdcFine(item.amount!)}</span>
           </span>
           <span className="text-xs" style={{ color: 'var(--subtle)' }}>{timeAgo(item.timestamp)}</span>
         </div>
         <div className="flex items-center gap-2 mt-1">
           {item.fee !== undefined && item.fee > 0n && (
-            <span className="text-xs" style={{ color: 'var(--subtle)' }}>fee ${fmtUsdc(item.fee)}</span>
+            <span className="text-xs" style={{ color: 'var(--subtle)' }}>fee ${fmtUsdcFine(item.fee)}</span>
           )}
           {explorerLink}
         </div>
