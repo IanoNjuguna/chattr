@@ -1,6 +1,8 @@
 # Contributing to chattr
 
-chattr is a hackathon team's shared USDC pot on Arc. The spec is [`PRD.md`](./PRD.md) and the agent conventions are [`AGENTS.md`](./AGENTS.md). This file is the human workflow.
+chattr is a hackathon team's shared USDC pot on Arc. The spec is [`PRD.md`](./PRD.md), the conventions are [`AGENTS.md`](./AGENTS.md), and the licence is [AGPL-3.0](./LICENSE). This file is the human workflow.
+
+Contributions are accepted under AGPL-3.0. If you run a modified chattr as a network service, section 13 requires you to offer that source to its users. If that is a problem for your use, this is the wrong project to build on.
 
 ---
 
@@ -22,9 +24,19 @@ No exceptions except production being down. That includes docs, copy and skills.
 ## Verify before committing
 
 ```bash
-npm run verify     # typecheck + build
-forge test         # contract tests
+bun install --frozen-lockfile
+bunx tsc --noEmit
+bun run build
+forge test
 ```
+
+`lib/` and `contracts/out/` are gitignored, so reconstruct the Solidity dependencies once before the first `forge test`:
+
+```bash
+git clone --depth 1 https://github.com/foundry-rs/forge-std lib/forge-std
+```
+
+The README has the full three-level testing guide, including the Arc testnet run that actually exercises wallets and the UI.
 
 Contract rules that must have a test each: double approve reverts, execute before `unlockAt` reverts, fee is 0.5%, shares sum to 10000 bps, zero payee reverts, a request that already executed cannot execute twice.
 
