@@ -1,0 +1,15 @@
+node_modules/
+dist/
+
+# Foundry: build output and vendored dependencies are not source
+lib/
+contracts/out/
+contracts/cache/
+broadcast/
+
+# Arc Studio pull tracker
+.arc-studio/
+
+.env
+.env.*
+*.log
