@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "skills": {
+    "apple-design": {
+      "source": "emilkowalski/skill",
+      "sourceType": "github",
+      "skillPath": "skills/apple-design/SKILL.md",
+      "computedHash": "77bb63b7043bb93aca2ff4ab040c249484eef35682bb6ff7163433c31d30adc7"
+    },
+    "arc-studio-build": {
+      "source": "./local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/arc-studio-build/SKILL.md",
+      "computedHash": "ecdfa8c732cb7c51fd6fb102e7d173868ec76a95bb0c8f96aeeec7a1e6aefb1d"
+    },
+    "check-compiler-errors": {
+      "source": "./local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/check-compiler-errors/SKILL.md",
+      "computedHash": "36ce8d687971ff99d6bfb7cc62d23fd6e415c002f1545bc02e13431a62d9f6fe"
+    },
+    "feature-process": {
+      "source": "./local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/feature-process/SKILL.md",
+      "computedHash": "ab6762e51ffc53f7bef7c1fc1216885a6379e63802fb4681cea9f83cca28b3c4"
+    },
+    "humanise-text": {
+      "source": "IntersectMBO/developer-experience",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/humanise-text/SKILL.md",
+      "computedHash": "19641671d25c35da734c01900e9d77416ef54eb74364d1bacb8e507db1303707"
+    },
+    "modular-ui-authoring": {
+      "source": "./local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/modular-ui-authoring/SKILL.md",
+      "computedHash": "830830e776db548777b632033f0915a0af4d4d227bfb2fcc14582ce9ef7960b1"
+    },
+    "skill-gardening": {
+      "source": "./local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/skill-gardening/SKILL.md",
+      "computedHash": "0d0c196039e1e0d90e1d26fff6424181a647ef91b8ab969b23345413fad646f1"
+    }
+  },
+  "note": "Ported from seti-v4. humanise-text, apple-design and skill-gardening are verbatim copies; feature-process, check-compiler-errors and modular-ui-authoring are adapted for chattr; arc-studio-build is new here."
+}
