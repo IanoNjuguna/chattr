@@ -1,0 +1,10 @@
+# CODEOWNERS
+#
+# Default owner for everything in the repo. GitHub requests a review from the
+# matching owner on every pull request once branch protection requires code
+# owner review; until then the assignment is advisory.
+#
+# Add per-path rules only when a path needs a different owner. A path rule that
+# names the same person as `*` adds nothing.
+
+* @IanoNjuguna
