@@ -1,0 +1,64 @@
+name: verify
+
+# The gate that must be green before a merge. It no-ops while a half of the repo
+# does not exist yet, so it is honest from the first commit: no Foundry project,
+# no contract job; no package.json, no app job.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    name: forge test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundry project present?
+        id: probe
+        run: |
+          if [ -f foundry.toml ]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; echo "no foundry.toml yet, skipping"; fi
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        if: steps.probe.outputs.found == 'true'
+
+      - name: forge test
+        if: steps.probe.outputs.found == 'true'
+        run: forge test -vv
+
+  app:
+    name: typecheck + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: App package present?
+        id: probe
+        run: |
+          if [ -f package.json ]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; echo "no package.json yet, skipping"; fi
+
+      - uses: actions/setup-node@v4
+        if: steps.probe.outputs.found == 'true'
+        with:
+          node-version: 22
+
+      - name: install
+        if: steps.probe.outputs.found == 'true'
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+
+      - name: typecheck
+        if: steps.probe.outputs.found == 'true'
+        run: npx tsc --noEmit
+
+      - name: build
+        if: steps.probe.outputs.found == 'true'
+        run: npm run build --if-present
