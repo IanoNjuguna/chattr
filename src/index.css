@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Arc Dark tokens ── */
+:root {
+  --bg: #0d1b2f;
+  --bg-gradient: linear-gradient(180deg, #0c1929 0%, #0f1e33 58%, #122d45 100%);
+  --surface: rgba(255, 255, 255, 0.07);
+  --surface-strong: rgba(255, 255, 255, 0.11);
+  --surface-muted: #1a2a40;
+  --ink: #f0f4fb;
+  --ink-2: #c8d8ef;
+  --muted: #8fa8c8;
+  --subtle: #5a7a9e;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(160, 200, 240, 0.40);
+  --accent: #acc6e9;
+  --accent-hover: #cde0f5;
+  --accent-dim: rgba(172, 198, 233, 0.15);
+  --success: #7dd8a0;
+  --danger: #e86d7a;
+  --spectral: linear-gradient(90deg, #5fbeff, #af8ff4, #f05c6b, #ffcd83, #7ef1b3);
+}
+
+/* ── Fonts ── */
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg-gradient);
+  color: var(--ink);
+  min-height: 100dvh;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.display {
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', Menlo, monospace;
+}
+
+/* ── Scrollbars ── */
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(172, 198, 233, 0.2) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(172, 198, 233, 0.2); border-radius: 2px; }
+
+/* ── Sonner toasts ── */
+[data-sonner-toast][data-type='success'] { background: #122d45 !important; }
+[data-sonner-toast][data-type='error']   { background: #2a1520 !important; }
