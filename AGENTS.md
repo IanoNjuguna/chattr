@@ -93,4 +93,5 @@ If a rule fits two skills, it belongs in one and is cross-referenced from the ot
 
 - No design system file yet. `apple-design` governs taste until one exists, and if one is added it becomes the owner of tokens
 - No issue templates. `gh issue create` with the five fields in `feature-process` is the shape; the PR template is `.github/pull_request_template.md`
-- Branch protection on `main` is a manual step in the GitHub UI. Until it is on, `verify` and `pr-guard` still run and still fail, they just do not block the merge button
+- Branch protection on `main` is **live**: pull request required, three required checks (`issue link + branch name`, `forge test`, `typecheck + build`) with the branch up to date, linear history, no force push, no deletion, conversation resolution, and admins are not exempt. A direct push to `main` is rejected
+- Required approvals are deliberately **zero**. GitHub forbids approving your own pull request, so requiring one would deadlock a single-maintainer repo. `CODEOWNERS` still requests the review automatically; it does not block
