@@ -66,6 +66,22 @@ Out, deliberately:
 6. Split payout: one execution pays the room's configured shares to each member wallet.
 7. Timed payout: a request with unlockAt set cannot execute before that timestamp, which covers bounty-after-deadline and vesting-style payouts.
 
+### 6.1 Walkthrough, three teammates and one payee
+
+0. Landing, no wallet connected. Room preview with sample activity and a Create a room button. No connect wall on first paint
+1. Captain connects, creates the room: name, two member addresses, threshold 2 of 3. One signature. Room opens at 0.00 USDC with three avatars and a 2 of 3 badge
+2. Invite is the room link. Teammates open it, connect, and are recognised by their address. No signup, no email
+3. Top up: any member, one signature, a deposit card lands in the feed, header balance moves (transaction 1)
+4. Request: member enters payee, amount, memo. A grey pending card appears reading 0 of 2 approvals
+5. Approve: each member signs once on that card. Card reads 1 of 2, then 2 of 2, and Execute enables
+6. Execute: anyone signs once. Contract takes the 0.5% fee, pays the payee, card flips to Executed with amount, fee, payee and explorer link
+7. Split: shares set once at 50/30/20. Captain enters 0.9 USDC and executes. One signature, three transfers, one card with three lines
+8. Timed: a request with unlockAt set collects approvals immediately, Execute stays disabled with a countdown, then fires
+
+Rules that hold everywhere: one signature per state change, one card per action, balance always in the header, approvals always on the card, payee never needs an account.
+
+Design risk sits in steps 0 and 1. An empty room on a first visit is where this reads as a product or as a form.
+
 ## 7. Contract interface
 
 ```solidity
@@ -130,7 +146,11 @@ And: the app builds, the preview renders with no wallet connected, and every exe
 
 ## 13. Open questions
 
-- Is USDC on Arc an ERC-20 at a fixed address, or the native gas token with an ERC-20 view? Decimals must be confirmed on chain before any transfer math is written
+Resolved, verified against `https://rpc.mainnet.arc.io` on 2026-10-20:
+- USDC is the native gas asset (18 decimals) and there is an ERC-20 view at `0x3600000000000000000000000000000000000000` with 6 decimals. `decimals()` returns 6, `symbol()` returns USDC, `eth_chainId` returns 0x13b2 (5042)
+- Therefore contract math uses the ERC-20 interface at 6 decimals, and any display of a native balance divides by 1e12
+
+Open:
 - The CLI has no push command, so the public repo comes from the Studio web workspace or a manual push of pulled code
 - Multi-wallet demo: three distinct addresses must appear on chain, so the demo needs three funded wallets, not one key cycling funds
 - Does the Studio preview support switching injected wallets, or does the demo need separate browser profiles
