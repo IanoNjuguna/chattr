@@ -4,6 +4,8 @@ import { decodeEventLog, isAddress } from 'viem'
 import { toast } from 'sonner'
 import { useCreateRoom } from '../../hooks/useWrite'
 import { CHATTR_ABI } from '../../lib/abi'
+import { useRoomCount } from '../../hooks/useRoom'
+import { explorerTx } from '../../lib/constants'
 import { go, roomPath } from '../../lib/routing'
 import { ConnectPrompt, RoomList } from './RoomList'
 
@@ -23,7 +25,8 @@ const label = (s: string) => (
  */
 export function CreateRoomForm() {
   const { address } = useAccount()
-  const { createRoom, isPending, error, receipt } = useCreateRoom()
+  const { createRoom, isPending, error, receipt, hash, isSuccess } = useCreateRoom()
+  const roomCount = useRoomCount()
 
   const [name, setName] = useState('')
   const [second, setSecond] = useState('')
@@ -66,10 +69,14 @@ export function CreateRoomForm() {
   }, [receipt])
 
   useEffect(() => {
-    if (createdId === null) return
-    toast.success(`Room #${createdId} created`)
-    go(roomPath(createdId))
+    if (createdId !== null) toast.success(`Room #${createdId} created`)
   }, [createdId])
+
+  /** Fallback: a confirmed tx with no decoded event still means the newest room is ours. */
+  useEffect(() => {
+    if (!isSuccess || createdId !== null || roomCount === 0n) return
+    setCreatedId(roomCount - 1n)
+  }, [isSuccess, createdId, roomCount])
 
   useEffect(() => {
     if (error) toast.error(error.message?.slice(0, 90) ?? 'Transaction failed')
@@ -78,6 +85,29 @@ export function CreateRoomForm() {
   const submit = () => {
     if (reason || !address) return
     createRoom(name.trim(), members, effectiveThreshold)
+  }
+
+  if (createdId !== null) {
+    return (
+      <main className="min-h-dvh flex items-center justify-center px-6" style={{ background: 'var(--bg)' }}>
+        <div className="w-full max-w-sm text-center">
+          <div className="text-[10.5px] uppercase tracking-[0.12em]" style={{ color: 'var(--success)' }}>Created</div>
+          <h1 className="display text-[26px] mt-2" style={{ color: 'var(--ink)' }}>Room #{createdId.toString()}</h1>
+          <p className="mt-2 text-[12px]" style={{ color: 'var(--muted)' }}>
+            {name.trim()} is live. Nothing moves until {effectiveThreshold} of {members.length} approve.
+          </p>
+          <button onClick={() => go(roomPath(createdId))}
+            className="mt-6 w-full rounded-full py-3 text-sm font-semibold"
+            style={{ background: 'var(--ink)', color: 'var(--bg)' }}>
+            Open room #{createdId.toString()}
+          </button>
+          <button onClick={() => setCreatedId(null)}
+            className="mt-3 text-[11.5px]" style={{ color: 'var(--subtle)' }}>
+            Create another
+          </button>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -127,6 +157,13 @@ export function CreateRoomForm() {
           }}>
           {isPending ? 'Confirm in your wallet…' : 'Create room'}
         </button>
+
+        {hash && (
+          <a href={explorerTx(hash)} target="_blank" rel="noopener noreferrer"
+            className="mt-2 block text-center mono text-[10.5px]" style={{ color: 'var(--accent)' }}>
+            view transaction
+          </a>
+        )}
 
         <p className="mt-2 text-center text-[11px]" style={{ color: reason ? 'var(--waiting)' : 'var(--subtle)' }}>
           {!address ? <ConnectPrompt /> : (reason ?? 'Nothing leaves without the approvals you set.')}
