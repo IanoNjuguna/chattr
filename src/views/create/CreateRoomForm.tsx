@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, usePublicClient, useSwitchChain } from 'wagmi'
 import { decodeEventLog, isAddress } from 'viem'
 import { toast } from 'sonner'
 import { useCreateRoom } from '../../hooks/useWrite'
 import { CHATTR_ABI } from '../../lib/abi'
 import { useRoomCount } from '../../hooks/useRoom'
-import { explorerTx } from '../../lib/constants'
+import { CHATTR_ADDRESS, explorerTx, TARGET_CHAIN_ID, TARGET_CHAIN_NAME } from '../../lib/constants'
 import { go, roomPath } from '../../lib/routing'
 import { ConnectPrompt, RoomList } from './RoomList'
 
@@ -27,12 +27,19 @@ export function CreateRoomForm() {
   const { address } = useAccount()
   const { createRoom, isPending, error, receipt, hash, isSuccess } = useCreateRoom()
   const roomCount = useRoomCount()
+  const client = usePublicClient({ chainId: TARGET_CHAIN_ID })
+  const { chain: walletChain } = useAccount()
+  const { switchChain } = useSwitchChain()
+  /** The receipt hook follows the wallet's chain, the contract lives on testnet. */
+  const wrongChain = !!walletChain && walletChain.id !== TARGET_CHAIN_ID
 
   const [name, setName] = useState('')
   const [second, setSecond] = useState('')
   const [third, setThird] = useState('')
   const [threshold, setThreshold] = useState(2)
   const [createdId, setCreatedId] = useState<bigint | null>(null)
+  /** The count when Create was pressed. A rise means our room is the one at that index. */
+  const [baseCount, setBaseCount] = useState<bigint | null>(null)
 
   const others = [second.trim(), third.trim()].filter(s => s.length > 0)
   const members: `0x${string}`[] = address ? [address, ...others as `0x${string}`[]] : []
@@ -43,6 +50,7 @@ export function CreateRoomForm() {
 
   const reason =
     !address ? 'Connect a wallet first'
+    : wrongChain ? `Switch to ${TARGET_CHAIN_NAME} in your wallet`
     : name.trim().length === 0 ? 'Give the room a name'
     : others.length === 0 ? 'Add one more person'
     : !validAddrs ? 'That address is not valid'
@@ -72,6 +80,34 @@ export function CreateRoomForm() {
     if (createdId !== null) toast.success(`Room #${createdId} created`)
   }, [createdId])
 
+  useEffect(() => {
+    if (error) setBaseCount(null)
+  }, [error])
+
+  /**
+   * The authoritative check. Poll `roomCount` straight from the chain while a
+   * creation is in flight, and the room is confirmed the moment the count rises.
+   * This is what makes the screen work even when the wallet never reports back.
+   */
+  useEffect(() => {
+    if (baseCount === null || createdId !== null || !client) return
+    let stop = false
+    const id = setInterval(async () => {
+      try {
+        const count = await client.readContract({
+          address: CHATTR_ADDRESS, abi: CHATTR_ABI, functionName: 'roomCount',
+        }) as bigint
+        if (!stop && count > baseCount) {
+          setCreatedId(baseCount)
+          clearInterval(id)
+        }
+      } catch {
+        // keep polling; a transient RPC error is not a failed creation
+      }
+    }, 2000)
+    return () => { stop = true; clearInterval(id); setBaseCount(null) }
+  }, [baseCount, createdId, client])
+
   /** Fallback: a confirmed tx with no decoded event still means the newest room is ours. */
   useEffect(() => {
     if (!isSuccess || createdId !== null || roomCount === 0n) return
@@ -84,6 +120,7 @@ export function CreateRoomForm() {
 
   const submit = () => {
     if (reason || !address) return
+    setBaseCount(roomCount)
     createRoom(name.trim(), members, effectiveThreshold)
   }
 
@@ -113,6 +150,14 @@ export function CreateRoomForm() {
   return (
     <main className="min-h-dvh flex items-center justify-center px-6 py-10" style={{ background: 'var(--bg)' }}>
       <div className="w-full max-w-sm">
+      {wrongChain && (
+        <button onClick={() => switchChain({ chainId: TARGET_CHAIN_ID })}
+          className="mb-6 w-full rounded-xl px-4 py-3 text-left text-[11.5px] flex items-center justify-between"
+          style={{ background: 'var(--waiting-soft, rgba(245,166,35,0.10))', color: 'var(--waiting)' }}>
+          <span>Your wallet is on {walletChain?.name ?? 'another network'}. This room list is on {TARGET_CHAIN_NAME}.</span>
+          <span className="font-semibold">Switch</span>
+        </button>
+      )}
         <button onClick={() => go('/')} className="text-[11px]" style={{ color: 'var(--subtle)' }}>← back</button>
         <h1 className="display text-[26px] mt-4" style={{ color: 'var(--ink)' }}>New room</h1>
 
@@ -148,14 +193,14 @@ export function CreateRoomForm() {
           ))}
         </div>
 
-        <button onClick={submit} disabled={!!reason || isPending}
+        <button onClick={submit} disabled={!!reason || isPending || baseCount !== null}
           className="mt-6 w-full rounded-full py-3 text-sm font-semibold"
           style={{
             background: reason ? 'var(--surface-strong)' : 'var(--ink)',
             color: reason ? 'var(--subtle)' : 'var(--bg)',
-            cursor: reason ? 'not-allowed' : 'pointer',
+            cursor: reason || baseCount !== null ? 'not-allowed' : 'pointer',
           }}>
-          {isPending ? 'Confirm in your wallet…' : 'Create room'}
+          {isPending ? 'Confirm in your wallet…' : baseCount !== null ? 'Waiting for the chain…' : 'Create room'}
         </button>
 
         {hash && (
