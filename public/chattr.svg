@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="chattr">
+  <rect width="64" height="64" rx="15" fill="#0d1b2f"/>
+  <!-- C, open at 3 o'clock: the room -->
+  <path d="M47.5 22.5 A19 19 0 1 0 47.5 41.5"
+        fill="none" stroke="#f0f4fb" stroke-width="9" stroke-linecap="round"/>
+  <!-- the payment leaving through the opening -->
+  <circle cx="56" cy="32" r="5.5" fill="#f0f4fb"/>
+</svg>

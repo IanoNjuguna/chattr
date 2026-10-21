@@ -12,6 +12,6 @@ export const config = createConfig(
     appName: 'chattr',
     appDescription: 'A shared USDC room for a team.',
     appUrl: 'https://chattr.app',
-    appIcon: 'https://chattr.app/chattr.svg',
+    appIcon: '/chattr.svg',
   }),
 )

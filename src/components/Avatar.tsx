@@ -39,7 +39,7 @@ export function Avatar({ address, size = 32, title }: Props) {
         background:      bg,
         color:          '#fff',
         fontSize:        fs,
-        fontFamily:     "'Space Grotesk', sans-serif",
+        fontFamily:     "'DM Sans', sans-serif",
         fontWeight:      700,
         flexShrink:      0,
         userSelect:     'none',
