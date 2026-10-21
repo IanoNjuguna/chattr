@@ -11,6 +11,8 @@ interface Props {
   roomId:        bigint
   connectedAddr: `0x${string}` | undefined
   onDone:        () => void
+  /** Which form to open first, so the header buttons land on the right panel. */
+  defaultTab?:   Tab
 }
 
 type Tab = 'topup' | 'request'
@@ -19,8 +21,8 @@ function parseAddr(s: string): `0x${string}` | null {
   return /^0x[0-9a-fA-F]{40}$/.test(s) ? s as `0x${string}` : null
 }
 
-export function Composer({ room, roomId, connectedAddr, onDone }: Props) {
-  const [tab, setTab]         = useState<Tab>('topup')
+export function Composer({ room, roomId, connectedAddr, onDone, defaultTab = 'topup' }: Props) {
+  const [tab, setTab]         = useState<Tab>(defaultTab)
   const [amount, setAmount]   = useState('')
   const [toAddr, setToAddr]   = useState('')
   const [memo, setMemo]       = useState('')
