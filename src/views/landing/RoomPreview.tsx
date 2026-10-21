@@ -1,93 +1,71 @@
+import { FeedRow } from '../room/FeedRow'
 import { fmtUsdcFine } from '../../lib/money'
 import { Avatar } from '../../components/Avatar'
+import type { ActivityItem, RoomData } from '../../lib/types'
 
-const MEMBERS = [
-  '0xA100000000000000000000000000000000000001',
-  '0xB200000000000000000000000000000000000002',
-  '0xC300000000000000000000000000000000000003',
+const ROOM: RoomData = {
+  name: 'Hackathon team',
+  captain: '0x8A2f4C3d91B7e05F6aC81d9E4b23F7AcD6105e38',
+  members: [
+    '0x8A2f4C3d91B7e05F6aC81d9E4b23F7AcD6105e38',
+    '0x3D9c1B7e05F6aC81d9E4b23F7AcD6105e38a4B2f',
+    '0xC4E7b19A2F0d6385Bca94e7D21F0538aB9e6C417',
+  ],
+  threshold: 2,
+  balance: 262_000_000n,
+  shareMembers: [],
+  shareBps: [],
+}
+
+const ITEMS: ActivityItem[] = [
+  {
+    id: 'p1', kind: 'executed', txHash: '0x1', timestamp: 0, requestId: 0n,
+    to: '0x6B1Df8a04C29e7B3d510aF62C8e194b07D3F5a86', memo: 'Designer',
+    amount: 120_000_000n, fee: 600_000n, attested: true, delivered: true,
+    attestNote: 'Files received',
+  },
+  {
+    id: 'p2', kind: 'request', txHash: '0x2', timestamp: 0, requestId: 1n,
+    to: '0x91Fc3b0D7a4E25c8B6d01fA947E3c5b2D80a4F16', memo: 'API credits',
+    amount: 18_000_000n,
+  },
+  {
+    id: 'p3', kind: 'approval', txHash: '0x3', timestamp: 0, requestId: 1n,
+    voter: '0x3D9c1B7e05F6aC81d9E4b23F7AcD6105e38a4B2f', approvals: 1n,
+  },
+  {
+    id: 'p4', kind: 'deposit', txHash: '0x4', timestamp: 0,
+    sender: '0x8A2f4C3d91B7e05F6aC81d9E4b23F7AcD6105e38', amount: 400_000_000n,
+  },
 ]
 
-const ROWS = [
-  { what: 'Paid designer', who: '0xD400000000000000000000000000000000000004', amt: 120_000_000n, state: 'Delivered', when: '2d' },
-  { what: 'Requested · API credits', who: '0xD500000000000000000000000000000000000005', amt: 18_000_000n, state: '1 of 2', when: '3d' },
-  { what: 'Split payout · 50/30/20', who: '0xB200000000000000000000000000000000000002', amt: 62_000_000n, state: 'Paid', when: '5d' },
-  { what: 'Deposited · hackathon prize', who: '0xA100000000000000000000000000000000000001', amt: 400_000_000n, state: '', when: '6d' },
-]
-
-/** The real product, as an object on the page. Not a device frame, not a mockup. */
+/**
+ * The real room, rendered with the real components. Not a mock: if the row
+ * changes, this changes with it.
+ */
 export function RoomPreview() {
   return (
-    <div className="pt-2">
+    <div className="flex flex-col justify-center h-full">
       <div
         className="w-full rounded-2xl overflow-hidden"
-        style={{ background: 'var(--surface-muted)', border: '1px solid var(--border)' }}
+        style={{ background: 'var(--bg)', border: '1px solid var(--border-strong)' }}
       >
-        <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div className="px-7 pt-5 pb-4">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold" style={{ color: 'var(--ink)' }}>
-              Hackathon team
-            </span>
-            <span
-              className="mono text-[10px] uppercase tracking-[0.12em] rounded-full px-2 py-1"
-              style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}
-            >
-              2 of 3
-            </span>
+            <span className="text-[12px] font-medium" style={{ color: 'var(--ink)' }}>{ROOM.name}</span>
+            <div className="flex -space-x-1.5">
+              {ROOM.members.map(a => <Avatar key={a} address={a} size={18} />)}
+            </div>
           </div>
-          <div className="mt-3 flex items-end justify-between">
-            <span className="amount text-[30px] leading-none" style={{ color: 'var(--ink)' }}>
-              {fmtUsdcFine(262_000_000n)}
-            </span>
-            <span className="text-[11px]" style={{ color: 'var(--subtle)' }}>
-              USDC · 0.5% fee
-            </span>
-          </div>
-          <div className="mt-3 flex -space-x-2">
-            {MEMBERS.map(a => (
-              <Avatar key={a} address={a} size={20} />
-            ))}
+          <div className="amount text-[30px] leading-none mt-2" style={{ color: 'var(--ink)' }}>
+            {fmtUsdcFine(ROOM.balance)}
           </div>
         </div>
 
-        <ul>
-          {ROWS.map(row => (
-            <li
-              key={row.what}
-              className="px-5 py-3 flex items-center justify-between gap-3"
-              style={{ borderBottom: '1px solid var(--border)' }}
-            >
-              <div className="min-w-0">
-                <div className="text-[12px] font-medium truncate" style={{ color: 'var(--ink)' }}>
-                  {row.what}
-                </div>
-                <div className="mono text-[10px]" style={{ color: 'var(--subtle)' }}>
-                  {row.who.slice(0, 6)}…{row.who.slice(-4)} · {row.when}
-                </div>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="amount text-[12px]" style={{ color: 'var(--ink)' }}>
-                  ${fmtUsdcFine(row.amt)}
-                </div>
-                {row.state && (
-                  <div
-                    className="text-[10px]"
-                    style={{ color: row.state === '1 of 2' ? 'var(--waiting)' : 'var(--success)' }}
-                  >
-                    {row.state}
-                  </div>
-                )}
-              </div>
-            </li>
+        <div style={{ borderTop: '1px solid var(--border)' }}>
+          {ITEMS.map(item => (
+            <FeedRow key={item.id} item={item} selected={false} onSelect={() => {}} />
           ))}
-        </ul>
-
-        <div className="px-5 py-3 flex items-center justify-between">
-          <span className="text-[11px]" style={{ color: 'var(--subtle)' }}>
-            Receipts keep the outcome
-          </span>
-          <span className="mono text-[10px]" style={{ color: 'var(--subtle)' }}>
-            explorer.arc.io
-          </span>
         </div>
       </div>
     </div>
