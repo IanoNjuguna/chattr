@@ -10,7 +10,7 @@ export const USDC_DECIMALS = 6
 
 // ─── Contract ─────────────────────────────────────────────────────────────────
 // Fill in after deployment; all features degrade gracefully when this is zero
-export const CHATTR_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`
+export const CHATTR_ADDRESS = '0x248bd5d09b394d7d6041188ef3bbc2920ac8e205' as `0x${string}`
 export const IS_DEPLOYED = CHATTR_ADDRESS !== '0x0000000000000000000000000000000000000000'
 
 // ─── Explorer ─────────────────────────────────────────────────────────────────

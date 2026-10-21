@@ -21,7 +21,6 @@ export interface RequestData {
   attested:      boolean
   delivered:     boolean
   attestNote:    string
-  execTxHash:    `0x${string}`
 }
 
 // Activity feed entries (built from on-chain events)
