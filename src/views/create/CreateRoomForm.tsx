@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useCreateRoom } from '../../hooks/useWrite'
 import { CHATTR_ABI } from '../../lib/abi'
 import { go, roomPath } from '../../lib/routing'
+import { ConnectPrompt, RoomList } from './RoomList'
 
 const FIELD = {
   background: 'var(--surface)',
@@ -128,8 +129,10 @@ export function CreateRoomForm() {
         </button>
 
         <p className="mt-2 text-center text-[11px]" style={{ color: reason ? 'var(--waiting)' : 'var(--subtle)' }}>
-          {reason ?? 'Nothing leaves without the approvals you set.'}
+          {!address ? <ConnectPrompt /> : (reason ?? 'Nothing leaves without the approvals you set.')}
         </p>
+
+        <RoomList />
       </div>
     </main>
   )

@@ -15,6 +15,8 @@ export const IS_DEPLOYED = CHATTR_ADDRESS !== '0x0000000000000000000000000000000
 
 // ─── Explorer ─────────────────────────────────────────────────────────────────
 export const EXPLORER_BASE = 'https://explorer.testnet.arc.io'  // testnet
+/** Blockscout-style API on the same host. Used to read contract logs. */
+export const EXPLORER_API = `${EXPLORER_BASE}/api/v2`
 // export const EXPLORER_BASE = 'https://explorer.arc.io'        // mainnet
 
 export function explorerTx(hash: string) {
