@@ -3,6 +3,7 @@ export const ARC_TESTNET_ID   = 5042002
 export const ARC_MAINNET_ID   = 5042
 export const TARGET_CHAIN_ID  = ARC_TESTNET_ID  // switch to mainnet when ready
 export const TARGET_CHAIN_NAME = 'Arc testnet'
+export const RPC_URL = 'https://rpc.testnet.arc.io'
 
 // ─── USDC ─────────────────────────────────────────────────────────────────────
 // ERC-20 at 6 decimals — same predeploy address on Arc mainnet and testnet
