@@ -5,6 +5,8 @@ interface Props {
   item: ActivityItem
   selected: boolean
   onSelect: () => void
+  /** Landing demo only: lets the sample room show "ready" between pending and paid. */
+  statusOverride?: { text: string; color: string }
 }
 
 const LABEL: Record<ActivityItem['kind'], string> = {
@@ -32,16 +34,16 @@ function statusOf(item: ActivityItem): { text: string; color: string } {
 }
 
 /** One 56px row. Amounts right-aligned in the mono face so decimals stack. */
-export function FeedRow({ item, selected, onSelect }: Props) {
+export function FeedRow({ item, selected, onSelect, statusOverride }: Props) {
   const inbound = item.kind === 'deposit'
-  const status = statusOf(item)
+  const status = statusOverride ?? statusOf(item)
   const amount = item.amount ?? 0n
   const isPendingRequest = item.kind === 'request'
 
   return (
     <button
       onClick={onSelect}
-      className="w-full text-left px-7 flex items-center gap-3"
+      className="row-hover w-full text-left px-7 flex items-center gap-3"
       style={{
         height: 56,
         borderBottom: '1px solid var(--border)',

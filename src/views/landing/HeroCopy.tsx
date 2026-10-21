@@ -49,7 +49,7 @@ export function HeroCopy() {
         </button>
       </div>
 
-      <p className="mt-10 max-w-[34ch] text-[13px] leading-relaxed" style={{ color: 'var(--subtle)' }}>
+      <p className="mt-7 max-w-[36ch] text-[14px] leading-relaxed" style={{ color: 'var(--ink-2)' }}>
         You cannot drain it alone, and you cannot quietly spend it.
       </p>
     </div>
