@@ -20,7 +20,6 @@
   --accent-dim: rgba(172, 198, 233, 0.15);
   --success: #7dd8a0;
   --danger: #e86d7a;
-  --spectral: linear-gradient(90deg, #5fbeff, #af8ff4, #f05c6b, #ffcd83, #7ef1b3);
 }
 
 /* ── Fonts ── */
@@ -33,9 +32,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* One family for display and UI. Space Grotesk was dropped on purpose: it is
+   the default display face of every AI-coded dashboard, and two families bought
+   nothing here. */
 .display {
-  font-family: 'Space Grotesk', sans-serif;
-  letter-spacing: -0.03em;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .mono {
