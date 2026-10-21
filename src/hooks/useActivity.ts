@@ -1,158 +1,105 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createPublicClient, http, parseAbiItem } from 'viem'
-import { arcTestnet } from 'wagmi/chains'
-import { CHATTR_ADDRESS, IS_DEPLOYED } from '../lib/constants'
+import { CHATTR_ADDRESS, EXPLORER_API, IS_DEPLOYED, RPC_URL } from '../lib/constants'
+import { FALLBACK_WINDOW, mapExplorerLogs, toActivityItem, type ExplorerLogRow } from '../lib/activity'
 import type { ActivityItem } from '../lib/types'
 
-const RPC_URL = 'https://rpc.testnet.arc.io'
+const POLL_MS = 15_000
 
-function client() {
-  return createPublicClient({ chain: arcTestnet, transport: http(RPC_URL) })
+/** One client for the whole app, not one per call. */
+const client = createPublicClient({ transport: http(RPC_URL) })
+
+const FALLBACK_EVENTS = [
+  parseAbiItem('event Deposited(uint256 indexed roomId, address indexed sender, uint256 amount)'),
+  parseAbiItem('event Requested(uint256 indexed roomId, uint256 indexed requestId, address indexed to, uint256 amount, string memo, uint64 unlockAt)'),
+  parseAbiItem('event Approved(uint256 indexed roomId, uint256 indexed requestId, address indexed voter, uint256 approvalCount)'),
+  parseAbiItem('event Executed(uint256 indexed roomId, uint256 indexed requestId, address indexed to, uint256 amount, uint256 fee)'),
+  parseAbiItem('event SharesPaid(uint256 indexed roomId, uint256 totalAmount, uint256 fee)'),
+]
+
+async function fromExplorer(signal: AbortSignal): Promise<ExplorerLogRow[]> {
+  const res = await fetch(`${EXPLORER_API}/addresses/${CHATTR_ADDRESS}/logs`, { signal })
+  if (!res.ok) throw new Error(`explorer responded ${res.status}`)
+  const body = (await res.json()) as { items?: ExplorerLogRow[] }
+  return body.items ?? []
 }
 
-const LOOKBACK = 10_000n  // blocks
+/**
+ * Only used when the explorer is unreachable. The window is deliberately small:
+ * this RPC rejects any range above roughly 5,000 blocks (measured), which is why
+ * a wider scan cannot be the primary source.
+ */
+async function fromChain(roomId: bigint): Promise<ActivityItem[]> {
+  const head = await client.getBlockNumber()
+  const from = head > FALLBACK_WINDOW ? head - FALLBACK_WINDOW : 0n
 
-async function fetchTimestamp(blockNumber: bigint): Promise<number> {
-  try {
-    const block = await client().getBlock({ blockNumber })
-    return Number(block.timestamp) * 1000
-  } catch {
-    return Date.now()
+  const pages = await Promise.all(
+    FALLBACK_EVENTS.map(event =>
+      client.getLogs({ address: CHATTR_ADDRESS, event, args: { roomId }, fromBlock: from, toBlock: head }),
+    ),
+  )
+
+  const stamps = new Map<bigint, number>()
+  const items: ActivityItem[] = []
+
+  for (const log of pages.flat()) {
+    const blockNumber = log.blockNumber ?? 0n
+    if (!stamps.has(blockNumber)) {
+      const block = await client.getBlock({ blockNumber }).catch(() => null)
+      stamps.set(blockNumber, block ? Number(block.timestamp) * 1000 : Date.now())
+    }
+    const item = toActivityItem(roomId, {
+      topics: log.topics as unknown as string[],
+      data: log.data,
+      transaction_hash: log.transactionHash ?? '',
+      block_number: Number(blockNumber),
+      block_timestamp: new Date(stamps.get(blockNumber)!).toISOString(),
+      index: log.logIndex ?? 0,
+    })
+    if (item) items.push(item)
   }
+
+  return items.sort((a, b) => b.timestamp - a.timestamp)
 }
 
 export function useActivity(roomId: bigint) {
-  const [items, setItems]     = useState<ActivityItem[]>([])
+  const [items, setItems] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(false)
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     if (!IS_DEPLOYED) { setItems([]); return }
 
     let cancelled = false
+    const controller = new AbortController()
+    setItems([])
 
     const load = async () => {
       setLoading(true)
       try {
-        const head = await client().getBlockNumber()
-        const from = head > LOOKBACK ? head - LOOKBACK : 0n
-
-        const [deposits, requests, approvals, executions, sharesPaid] = await Promise.all([
-          client().getLogs({
-            address: CHATTR_ADDRESS,
-            event: parseAbiItem('event Deposited(uint256 indexed roomId, address indexed sender, uint256 amount)'),
-            args: { roomId },
-            fromBlock: from, toBlock: head,
-          }),
-          client().getLogs({
-            address: CHATTR_ADDRESS,
-            event: parseAbiItem('event Requested(uint256 indexed roomId, uint256 indexed requestId, address indexed to, uint256 amount, string memo, uint64 unlockAt)'),
-            args: { roomId },
-            fromBlock: from, toBlock: head,
-          }),
-          client().getLogs({
-            address: CHATTR_ADDRESS,
-            event: parseAbiItem('event Approved(uint256 indexed roomId, uint256 indexed requestId, address indexed voter, uint256 approvalCount)'),
-            args: { roomId },
-            fromBlock: from, toBlock: head,
-          }),
-          client().getLogs({
-            address: CHATTR_ADDRESS,
-            event: parseAbiItem('event Executed(uint256 indexed roomId, uint256 indexed requestId, address indexed to, uint256 amount, uint256 fee)'),
-            args: { roomId },
-            fromBlock: from, toBlock: head,
-          }),
-          client().getLogs({
-            address: CHATTR_ADDRESS,
-            event: parseAbiItem('event SharesPaid(uint256 indexed roomId, uint256 totalAmount, uint256 fee)'),
-            args: { roomId },
-            fromBlock: from, toBlock: head,
-          }),
-        ])
-
+        const rows = await fromExplorer(controller.signal)
         if (cancelled) return
-
-        const all: ActivityItem[] = []
-
-        for (const log of deposits) {
-          const ts = await fetchTimestamp(log.blockNumber!)
-          all.push({
-            id:        `dep-${log.transactionHash}-${log.logIndex}`,
-            kind:      'deposit',
-            txHash:    log.transactionHash ?? '',
-            timestamp: ts,
-            sender:    log.args.sender,
-            amount:    log.args.amount,
-          })
-        }
-
-        for (const log of requests) {
-          const ts = await fetchTimestamp(log.blockNumber!)
-          all.push({
-            id:        `req-${log.transactionHash}-${log.logIndex}`,
-            kind:      'request',
-            txHash:    log.transactionHash ?? '',
-            timestamp: ts,
-            requestId: log.args.requestId,
-            to:        log.args.to,
-            amount:    log.args.amount,
-            memo:      log.args.memo,
-          })
-        }
-
-        for (const log of approvals) {
-          const ts = await fetchTimestamp(log.blockNumber!)
-          all.push({
-            id:        `apr-${log.transactionHash}-${log.logIndex}`,
-            kind:      'approval',
-            txHash:    log.transactionHash ?? '',
-            timestamp: ts,
-            requestId: log.args.requestId,
-            voter:     log.args.voter,
-            approvals: log.args.approvalCount,
-          })
-        }
-
-        for (const log of executions) {
-          const ts = await fetchTimestamp(log.blockNumber!)
-          all.push({
-            id:        `exe-${log.transactionHash}-${log.logIndex}`,
-            kind:      'executed',
-            txHash:    log.transactionHash ?? '',
-            timestamp: ts,
-            requestId: log.args.requestId,
-            to:        log.args.to,
-            amount:    log.args.amount,
-            fee:       log.args.fee,
-          })
-        }
-
-        for (const log of sharesPaid) {
-          const ts = await fetchTimestamp(log.blockNumber!)
-          all.push({
-            id:        `shr-${log.transactionHash}-${log.logIndex}`,
-            kind:      'shares',
-            txHash:    log.transactionHash ?? '',
-            timestamp: ts,
-            amount:    log.args.totalAmount,
-            fee:       log.args.fee,
-          })
-        }
-
-        // reverse-chronological
-        all.sort((a, b) => b.timestamp - a.timestamp)
-
-        if (!cancelled) setItems(all)
+        setItems(mapExplorerLogs(roomId, rows))
+        setFailed(false)
       } catch (e) {
-        console.error('useActivity fetch failed', e)
+        if (cancelled || (e as Error).name === 'AbortError') return
+        try {
+          const fallback = await fromChain(roomId)
+          if (cancelled) return
+          setItems(fallback)
+          setFailed(false)
+        } catch {
+          if (!cancelled) setFailed(true)
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
 
     load()
-    const interval = setInterval(load, 12_000)
-    return () => { cancelled = true; clearInterval(interval) }
+    const timer = setInterval(load, POLL_MS)
+    return () => { cancelled = true; controller.abort(); clearInterval(timer) }
   }, [roomId])
 
-  return { items, loading }
+  return { items, loading, failed }
 }
