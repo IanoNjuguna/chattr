@@ -19,12 +19,13 @@
   --accent-hover: #cde0f5;
   --accent-dim: rgba(172, 198, 233, 0.15);
   --success: #7dd8a0;
+  --waiting: #ffc24b;
   --danger: #e86d7a;
 }
 
 /* ── Fonts ── */
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Poppins', system-ui, sans-serif;
   background: var(--bg-gradient);
   color: var(--ink);
   min-height: 100dvh;
@@ -36,9 +37,17 @@ body {
    the default display face of every AI-coded dashboard, and two families bought
    nothing here. */
 .display {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Poppins', system-ui, sans-serif;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
+}
+
+/* Money and hashes only. Poppins has no tabular figures, so every number that
+   has to line up in a column uses the mono face instead. */
+.amount {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 .mono {
