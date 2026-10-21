@@ -68,6 +68,23 @@ body {
   font-family: 'JetBrains Mono', Menlo, monospace;
 }
 
+/* Rows and avatars respond on hover, in the app and in the landing demo. */
+.row-hover {
+  transition: background 120ms ease;
+}
+.row-hover:hover {
+  background: var(--surface);
+}
+
+.avatar-hover {
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.avatar-hover:hover {
+  transform: translateY(-2px) scale(1.12);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--border-strong);
+  z-index: 2;
+}
+
 /* ── Scrollbars ── */
 * {
   box-sizing: border-box;

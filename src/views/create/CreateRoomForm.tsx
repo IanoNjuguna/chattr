@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { isAddress } from 'viem'
+import { decodeEventLog, isAddress } from 'viem'
 import { toast } from 'sonner'
 import { useCreateRoom } from '../../hooks/useWrite'
-import { useRoomCount } from '../../hooks/useRoom'
+import { CHATTR_ABI } from '../../lib/abi'
 import { go, roomPath } from '../../lib/routing'
 
 const FIELD = {
@@ -22,14 +22,13 @@ const label = (s: string) => (
  */
 export function CreateRoomForm() {
   const { address } = useAccount()
-  const roomCount = useRoomCount()
-  const { createRoom, isPending, isSuccess, error } = useCreateRoom()
+  const { createRoom, isPending, error, receipt } = useCreateRoom()
 
   const [name, setName] = useState('')
   const [second, setSecond] = useState('')
   const [third, setThird] = useState('')
   const [threshold, setThreshold] = useState(2)
-  const [pendingId, setPendingId] = useState<bigint | null>(null)
+  const [createdId, setCreatedId] = useState<bigint | null>(null)
 
   const others = [second.trim(), third.trim()].filter(s => s.length > 0)
   const members: `0x${string}`[] = address ? [address, ...others as `0x${string}`[]] : []
@@ -46,9 +45,30 @@ export function CreateRoomForm() {
     : !distinct ? 'Use three different addresses'
     : null
 
+  /**
+   * Read the new room id out of the RoomCreated event. A roomCount snapshot is
+   * stale by up to the poll interval, which sent five creations back to room 0.
+   */
   useEffect(() => {
-    if (isSuccess && pendingId !== null) go(roomPath(pendingId))
-  }, [isSuccess, pendingId])
+    if (!receipt) return
+    for (const log of receipt.logs) {
+      try {
+        const decoded = decodeEventLog({ abi: CHATTR_ABI, data: log.data, topics: log.topics })
+        if (decoded.eventName === 'RoomCreated') {
+          setCreatedId((decoded.args as { roomId: bigint }).roomId)
+          return
+        }
+      } catch {
+        // a log from another contract, or a different event
+      }
+    }
+  }, [receipt])
+
+  useEffect(() => {
+    if (createdId === null) return
+    toast.success(`Room #${createdId} created`)
+    go(roomPath(createdId))
+  }, [createdId])
 
   useEffect(() => {
     if (error) toast.error(error.message?.slice(0, 90) ?? 'Transaction failed')
@@ -56,7 +76,6 @@ export function CreateRoomForm() {
 
   const submit = () => {
     if (reason || !address) return
-    setPendingId(roomCount)
     createRoom(name.trim(), members, effectiveThreshold)
   }
 
