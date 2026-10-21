@@ -4,7 +4,7 @@ A shared USDC account for a team. Money goes in, out only with the room's rule, 
 
 Two to five people, one pot, a threshold of approvals, and a trail a funder can read. Built on Arc, where USDC is the gas token, so a team never has to buy anything else to use it.
 
-**Status: v1 code merged, not yet deployed.** Contracts and the room app are on `main` with 24 passing tests. Nothing is deployed to Arc mainnet, and no real USDC has moved. Testnet rehearsal comes next, then the mainnet run.
+**Status: deployed to Arc testnet, not mainnet.** Contracts and the room app are on `main` with 24 passing tests, and the registry lives at `0x248bd5d0…c8e205` on Arc testnet. No room exists yet, since creating one needs three funded wallets. Mainnet comes after the rehearsal.
 
 ## What it does
 
@@ -103,6 +103,23 @@ Testnet does not count for the Arc microgrant, which requires at least one Arc m
 Deploys are gated. There is no CI deploy step, no script that runs on merge, and `main` is protected. A deploy is a deliberate act with an explicit go, and mainnet amounts stay small, 1 to 5 USDC.
 
 Constructor arguments: the USDC address (`0x3600…0000`), the treasury address, and the fee in basis points (50).
+
+Verify any deployment yourself, don't take a report's word for it:
+
+```bash
+bun run scripts/verify-deploy.ts
+```
+
+It prints the chain id, bytecode size, `feeBps`, `treasury`, `usdc`, `roomCount` and the deploy receipt, then proves the cross-room `WrongRoom()` guard (`0xfa32c191`) is present in the runtime bytecode.
+
+### Deployments
+
+| Network | Contract | Tx | State |
+| --- | --- | --- | --- |
+| Arc Testnet | `0x248bd5d09b394d7d6041188ef3bbc2920ac8e205` | `0x389255810c5928ea060bd605078ffd5f6ae0a8d2eb1b33ad30dd4b2be9b73572` | current, includes the cross-room guard |
+| Arc Testnet | `0xe94fc65ee82484ca85769ec65c767de30146f40f` | `0xc0ab19ff3aeba333be5343509fc1423dae2a14a2730ba45de3e692767754027b` | **superseded**: deployed before the guard was applied, do not use |
+
+Both testnet deployments use the platform deployer as the fee treasury, `0x5B12Ce46C7194aD57d143bC22847224047b1Ef42`. A mainnet deployment needs a treasury you control.
 
 ## Where this code comes from
 

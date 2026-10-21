@@ -25,7 +25,6 @@ export function useRequest(requestId: bigint | null) {
         attested:      data.attested,
         delivered:     data.delivered,
         attestNote:    data.attestNote,
-        execTxHash:    data.execTxHash as `0x${string}`,
       }
     : undefined
 
