@@ -108,7 +108,7 @@ export function useCreateRoom() {
       address: CHATTR_ADDRESS, abi: CHATTR_ABI, functionName: 'createRoom',
       args: [name, members, threshold], chainId: TARGET_CHAIN_ID,
     })
-  return { createRoom, isPending, isConfirming: receipt.isLoading, isSuccess: receipt.isSuccess, hash, error }
+  return { createRoom, isPending, isConfirming: receipt.isLoading, isSuccess: receipt.isSuccess, hash, error, receipt: receipt.data }
 }
 
 // ── setShares / payShares ──────────────────────────────────────────────────────
