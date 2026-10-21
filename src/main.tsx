@@ -21,7 +21,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <ConnectKitProvider
           theme="midnight"
           customTheme={{
-            '--ck-font-family': "'DM Sans', sans-serif",
+            '--ck-font-family': "'Poppins', sans-serif",
             '--ck-primary-button-background': '#acc6e9',
             '--ck-primary-button-color': '#0d1b2f',
             '--ck-body-background': '#0f1e33',
@@ -36,7 +36,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 background: '#122d45',
                 border: '1px solid rgba(172,198,233,0.2)',
                 color: '#f0f4fb',
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'Poppins', sans-serif",
               },
             }}
           />

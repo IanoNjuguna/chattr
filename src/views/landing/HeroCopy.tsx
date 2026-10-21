@@ -1,32 +1,30 @@
 import { ConnectKitButton } from 'connectkit'
-import { BrandMark, Wordmark } from '../../components/BrandMark'
+import { BrandMark } from '../../components/BrandMark'
 import { go } from '../../lib/routing'
 
-const OBJECTIONS = [
-  'Not a multisig you have to babysit. Two approvals, then it pays.',
-  'No other token to buy. USDC pays the gas on Arc.',
-  'You cannot drain it alone, and you cannot quietly spend it.',
-]
-
-/** The left column: the whole pitch, one screen, no scroll. */
+/**
+ * One screen. The headline is two words, the rest is one line of plain
+ * language. No fee, no chain, no test counts: a person deciding whether this
+ * is for them does not need any of that, and every one of those words costs
+ * a reader.
+ */
 export function HeroCopy() {
   return (
     <div className="flex flex-col justify-center h-full">
-      <div className="flex items-center gap-2.5" style={{ color: 'var(--ink)' }}>
-        <BrandMark size={26} withDot />
-        <Wordmark className="text-[17px]" />
+      <div className="flex items-center gap-2" style={{ color: 'var(--ink)' }}>
+        <BrandMark size={22} withDot />
+        <span className="display text-[15px] tracking-tight">chattr</span>
       </div>
 
       <h1
-        className="display mt-9 text-[40px] leading-[1.05] lg:text-[58px]"
-        style={{ color: 'var(--ink)', textWrap: 'balance', maxWidth: '15ch' }}
+        className="display mt-8 text-[56px] leading-[0.98] lg:text-[76px]"
+        style={{ color: 'var(--ink)' }}
       >
-        Split the pot, without trusting one person with it.
+        Shared money.
       </h1>
 
-      <p className="mt-5 max-w-lg text-[15px] leading-relaxed" style={{ color: 'var(--ink-2)' }}>
-        A shared USDC room for your team. Everyone sees the balance. Nothing leaves
-        without two approvals. Every payment keeps a receipt.
+      <p className="mt-5 text-[15px]" style={{ color: 'var(--ink-2)' }}>
+        A pot your team can see, and nobody can empty alone.
       </p>
 
       <div className="mt-8 flex items-center gap-5">
@@ -44,22 +42,16 @@ export function HeroCopy() {
 
         <button
           onClick={() => go('/r/0')}
-          className="text-sm font-medium underline underline-offset-4"
-          style={{ color: 'var(--ink-2)' }}
+          className="text-sm underline underline-offset-4"
+          style={{ color: 'var(--muted)' }}
         >
-          Open a live room
+          See one
         </button>
       </div>
 
-      <ul className="mt-10 space-y-2.5">
-        {OBJECTIONS.map(line => (
-          <li key={line} className="flex gap-2.5 text-[13px]" style={{ color: 'var(--muted)' }}>
-            <span aria-hidden style={{ color: 'var(--success)' }}>✓</span>
-            {line}
-          </li>
-        ))}
-      </ul>
-
+      <p className="mt-10 max-w-[34ch] text-[13px] leading-relaxed" style={{ color: 'var(--subtle)' }}>
+        You cannot drain it alone, and you cannot quietly spend it.
+      </p>
     </div>
   )
 }
