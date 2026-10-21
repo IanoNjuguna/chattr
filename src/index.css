@@ -47,7 +47,21 @@ body {
 .amount {
   font-family: 'JetBrains Mono', monospace;
   font-variant-numeric: tabular-nums;
+  /* Slashed zero: a receipt gets read against a hash, so 0 and O must differ. */
+  font-feature-settings: 'zero' 1;
   letter-spacing: -0.01em;
+}
+
+/* Amounts that stack in a column. Right edge fixed so decimals line up even
+   when the digit count varies. */
+.amount-cell {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'zero' 1;
+  letter-spacing: -0.01em;
+  text-align: right;
+  width: 8ch;
+  white-space: nowrap;
 }
 
 .mono {
