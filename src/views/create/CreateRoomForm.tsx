@@ -23,10 +23,27 @@ const label = (s: string) => (
  * One screen. Two people is the minimum, a third is optional, and the button
  * always says why it will not fire.
  */
+/** Set when Create is pressed, cleared when the room is seen on chain. */
+const PENDING_KEY = 'chattr:pendingCreate'
+
 export function CreateRoomForm() {
   const { address } = useAccount()
   const { createRoom, isPending, error, receipt, hash, isSuccess } = useCreateRoom()
   const roomCount = useRoomCount()
+  /** Survives a reload: a slow transaction should not need the tab to stay open. */
+  const [resumed, setResumed] = useState(false)
+  useEffect(() => {
+    if (resumed || roomCount === 0n) return
+    let saved: string | null = null
+    try { saved = localStorage.getItem(PENDING_KEY) } catch {}
+    if (saved === null) { setResumed(true); return }
+    const base = BigInt(saved)
+    if (roomCount > base) {
+      try { localStorage.removeItem(PENDING_KEY) } catch {}
+      setCreatedId(base)
+    }
+    setResumed(true)
+  }, [roomCount, resumed])
   const client = usePublicClient({ chainId: TARGET_CHAIN_ID })
   const { chain: walletChain } = useAccount()
   const { switchChain } = useSwitchChain()
@@ -98,6 +115,7 @@ export function CreateRoomForm() {
           address: CHATTR_ADDRESS, abi: CHATTR_ABI, functionName: 'roomCount',
         }) as bigint
         if (!stop && count > baseCount) {
+          try { localStorage.removeItem(PENDING_KEY) } catch {}
           setCreatedId(baseCount)
           clearInterval(id)
         }
@@ -118,8 +136,26 @@ export function CreateRoomForm() {
     if (error) toast.error(error.message?.slice(0, 90) ?? 'Transaction failed')
   }, [error])
 
+  const checkNow = async () => {
+    if (baseCount === null || !client) return
+    try {
+      const count = (await client.readContract({
+        address: CHATTR_ADDRESS, abi: CHATTR_ABI, functionName: 'roomCount',
+      })) as bigint
+      if (count > baseCount) {
+        try { localStorage.removeItem(PENDING_KEY) } catch {}
+        setCreatedId(baseCount)
+      } else {
+        toast('Still pending on chain. Rooms appear once it confirms.')
+      }
+    } catch {
+      toast.error('Could not reach Arc')
+    }
+  }
+
   const submit = () => {
     if (reason || !address) return
+    try { localStorage.setItem(PENDING_KEY, roomCount.toString()) } catch {}
     setBaseCount(roomCount)
     createRoom(name.trim(), members, effectiveThreshold)
   }
@@ -202,6 +238,13 @@ export function CreateRoomForm() {
           }}>
           {isPending ? 'Confirm in your wallet…' : baseCount !== null ? 'Waiting for the chain…' : 'Create room'}
         </button>
+
+        {baseCount !== null && (
+          <button onClick={checkNow} className="mt-2 block w-full text-center text-[10.5px] underline"
+            style={{ color: 'var(--subtle)' }}>
+            check again
+          </button>
+        )}
 
         {hash && (
           <a href={explorerTx(hash)} target="_blank" rel="noopener noreferrer"
